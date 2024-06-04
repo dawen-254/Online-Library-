@@ -1,0 +1,123 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+class Book {
+public:
+    Book(string title, string author, string isbn) 
+        : title(title), author(author), isbn(isbn), available(true) {}
+
+    string getTitle() const { return title; }
+    string getAuthor() const { return author; }
+    string getISBN() const { return isbn; }
+    bool isAvailable() const { return available; }
+    void borrowBook() { available = false; }
+    void returnBook() { available = true; }
+
+private:
+    string title;
+    string author;
+    string isbn;
+    bool available;
+};
+
+class Member {
+public:
+    Member(string name, int memberId) : name(name), memberId(memberId) {}
+
+    string getName() const { return name; }
+    int getMemberId() const { return memberId; }
+
+private:
+    string name;
+    int memberId;
+};
+
+class Library {
+public:
+    void addBook(const Book& book) {
+        books.push_back(book);
+    }
+
+    void addMember(const Member& member) {
+        members.push_back(member);
+    }
+
+    void borrowBook(const string& isbn, int memberId) {
+        for (auto& book : books) {
+            if (book.getISBN() == isbn && book.isAvailable()) {
+                book.borrowBook();
+                borrowedBooks[memberId].push_back(book);
+                cout << "Book borrowed successfully." << endl;
+                return;
+            }
+        }
+        cout << "Book not available." << endl;
+    }
+
+    void returnBook(const string& isbn, int memberId) {
+        auto& memberBooks = borrowedBooks[memberId];
+        for (auto it = memberBooks.begin(); it != memberBooks.end(); ++it) {
+            if (it->getISBN() == isbn) {
+                it->returnBook();
+                memberBooks.erase(it);
+                cout << "Book returned successfully." << endl;
+                return;
+            }
+        }
+        cout << "Book not found in borrowed list." << endl;
+    }
+
+    void listAvailableBooks() const {
+        for (const auto& book : books) {
+            if (book.isAvailable()) {
+                cout << "Title: " << book.getTitle() 
+                     << ", Author: " << book.getAuthor() 
+                     << ", ISBN: " << book.getISBN() << endl;
+            }
+        }
+    }
+
+private:
+    vector<Book> books;
+    vector<Member> members;
+    unordered_map<int, vector<Book>> borrowedBooks;
+};
+
+int main() {
+    Library library;
+
+    Book book1("1984", "George Orwell", "1234567890");
+    Book book2("To Kill a Mockingbird", "Harper Lee", "2345678901");
+    Book book3("The Great Gatsby", "F. Scott Fitzgerald", "3456789012");
+
+    library.addBook(book1);
+    library.addBook(book2);
+    library.addBook(book3);
+
+    Member member1("Alice", 1);
+    Member member2("Bob", 2);
+
+    library.addMember(member1);
+    library.addMember(member2);
+
+    cout << "Available books:" << endl;
+    library.listAvailableBooks();
+
+    cout << "\nAlice borrows '1984':" << endl;
+    library.borrowBook("1234567890", 1);
+
+    cout << "\nAvailable books after borrowing:" << endl;
+    library.listAvailableBooks();
+
+    cout << "\nAlice returns '1984':" << endl;
+    library.returnBook("1234567890", 1);
+
+    cout << "\nAvailable books after returning:" << endl;
+    library.listAvailableBooks();
+
+    return 0;
+}
